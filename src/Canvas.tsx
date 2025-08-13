@@ -1,14 +1,15 @@
 function calculatePoints(angleA: number, angleB: number){
    const angleC = Math.PI - angleA - angleB; // Calculate angle C
-
+   const bx = 100 + Math.min(300, 600*Math.sin(angleC/2))
+   console.log(bx)
    const pointA = { x: 100, y: 100 };
-   const pointB = { x: 400, y: 100 };
+   const pointB = { x: bx, y: 100 };
 
    const lengthAB = Math.sqrt(
       Math.pow(pointB.x - pointA.x, 2) + Math.pow(pointB.y - pointA.y, 2)
    )
    const lengthAC = Math.sin(angleB) * lengthAB / Math.sin(angleC);
-   let pointC = { x: pointA.x + lengthAC*Math.cos(angleA),
+   const pointC = { x: pointA.x + lengthAC*Math.cos(angleA),
                   y: pointA.y - lengthAC*Math.sin(angleA) };
 
    return [pointA, pointB, pointC];
@@ -30,6 +31,12 @@ function angleArcPath(cx: number, cy: number, start: number, end: number, intern
       start = end;
       end = aux + Math.PI;
    }
+   const textAngle = end - start <= 21 * Math.PI/180 ?
+      end + Math.PI / 4 :
+      (start + end) / 2;
+   const textRadius = end - start <= 21 * Math.PI/180 ?
+      r + 5 :
+      r + 20;
    return (
       <>
          <path
@@ -39,14 +46,14 @@ function angleArcPath(cx: number, cy: number, start: number, end: number, intern
             strokeWidth="2"
          />
          <text
-            x={ cx + (r+18 ) * Math.cos((end + start)/2)}
-            y={ cy + (r+18) * Math.sin((end + start)/2)}
-            fontSize="12"
+            x={ cx + textRadius * Math.cos(textAngle)}
+            y={ cy + textRadius * Math.sin(textAngle) + 3}
+            fontSize="16"
             textAnchor="middle"
             alignmentBaseline="middle"
             fill="black"
             >
-               {incoginito?"x":Math.round((end - start) * (180 / Math.PI))} {incoginito?"":"°"}
+               {incoginito?"x":Math.round((end - start) * (180 / Math.PI))}{incoginito?"":"°"}
             </text>
          { internal ? "":
             <line x1={cx} y1={cy} x2={cx + 2*r*Math.cos(end)} y2={cy + 2*r*Math.sin(end)} stroke="black" />
@@ -59,11 +66,16 @@ function angleArcPath(cx: number, cy: number, start: number, end: number, intern
 interface CanvasProps {
    angleA: number;
    angleB: number;
-   internal: boolean;
+   internalA: boolean;
+   internalB: boolean;
+   internalC: boolean;
 }
-export default function Canvas({ angleA, angleB, internal}: CanvasProps) {
+export default function Canvas({ angleA, angleB, internalA, internalB, internalC}: CanvasProps) {
    angleA = angleA * Math.PI / 180; // Convert degrees to radians
    angleB = angleB * Math.PI / 180; // Convert degrees to radians
+
+   if(!internalA) angleA = Math.PI - angleA;
+   if(!internalB) angleB = Math.PI - angleB;
    const angleC = Math.PI - angleA - angleB; // Calculate angle C in degrees
 
    const [pa, pb, pc] = calculatePoints(angleA, angleB);
@@ -83,9 +95,9 @@ export default function Canvas({ angleA, angleB, internal}: CanvasProps) {
             <circle cx={pc.x} cy={pc.y} r="5" fill="red" />
 
 
-            {angleArcPath(pa.x, pa.y, -angleA, 0, true)}
-            {angleArcPath(pb.x, pb.y, Math.PI, Math.PI+angleB, true)}
-            {angleArcPath(pc.x, pc.y, angleB, angleB + angleC, internal, true)}
+            {angleArcPath(pa.x, pa.y, -angleA, 0, internalA)}
+            {angleArcPath(pb.x, pb.y, Math.PI, Math.PI+angleB, internalB)}
+            {angleArcPath(pc.x, pc.y, angleB, angleB + angleC, internalC, true)}
          </svg>
       </div>
    </div>
